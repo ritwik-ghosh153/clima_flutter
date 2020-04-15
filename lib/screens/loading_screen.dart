@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:clima/services/location.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:clima/services/networking.dart';
+
+const apiKey='be033c67b361974b883b0a0fb9d924d4';
 
 class LoadingScreen extends StatefulWidget {
   @override
@@ -9,30 +10,40 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
+
+  double _latitude;
+  double _longtude;
+
   @override
   void initState() {
     getLocation();
     super.initState();
   }
-  void getLocation() async {
-    Location loc= Location();
-    try {
-      await loc.getLocation();
-      print(loc.latitude);
-      print(loc.longitude);
-    }
-    catch(e){
-      print(e);
-    }
-  }
+
+void getLocationdata()async{
+  Location loc= Location();
+  await loc.getLocation();
+  _latitude=loc.latitude;
+  _longtude=loc.longitude;
+
+    NetworkHelper networkHelper=NetworkHelper(url:'https://api.openweathermap.org/data/2.5/weather?lat=$_latitude&lon=$_longtude&appid=$apiKey');
+    var weather=await getData();
+    String city=weather[]
+
+}
+
 
 
   Future<void> getData() async {
-    http.Response response= await http.get('https://samples.openweathermap.org/data/2.5/weather?lat=35&lon=139&appid=439d4b804bc8187953eb36d2a8c26a02');
+    http.Response response= await http.get('https://api.openweathermap.org/data/2.5/weather?lat=$_latitude&lon=$_longtude&appid=$apiKey');
     if(response.statusCode==200) {
       String data=response.body;
-      print(jsonDecode(data)['coord']['lon']);
-
+      String description=jsonDecode(data)['weather'][0]['description'];
+      double temp=jsonDecode(data)['main']['temp'];
+      String city=jsonDecode(data)['name'];
+      print(description);
+      print(temp);
+      print(city);
     }
     else
       print(response.statusCode);
@@ -40,7 +51,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    getData();
     return Scaffold(
       body: Center(
         child: RaisedButton(
